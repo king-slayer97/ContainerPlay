@@ -14,6 +14,8 @@ variables:
   imageRepository: 'nginxhtml'
   containerRegistry: 'tynybaytrivy.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/ACRTasks/dockerfile'
+  target: $(build.artifactstagingdirectory)
+  artifact: AM
   tag: '$(Build.BuildId)'
 
   # Agent VM image name
@@ -24,12 +26,12 @@ stages:
   displayName: Build and push stage
   jobs:
   - job: Build
-    displayName: Build
+    displayName: Build Image
     pool:
       vmImage: $(vmImageName)
     steps:
     - task: Docker@2
-      displayName: Build and push an image to container registry
+      displayName: Build and push the image to azure container registry
       inputs:
         command: buildAndPush
         repository: $(imageRepository)
@@ -38,9 +40,34 @@ stages:
         tags: |
           $(tag)
     - task: CmdLine@2
-      displayName: Scan
+      displayName: DOWNLOAD AND INSTALL AQUASEC TRIVY
       inputs:
         script: |
-         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy --exit-code 0 --severity MEDIUM,HIGH --ignore-unfixed $(containerRegistry)/$(imageRepository):$(tag)
-         
-         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy --exit-code 1 --severity CRITICAL --ignore-unfixed $(containerRegistry)/$(imageRepository):$(tag)
+         sudo apt-get install wget apt-transport-https gnupg lsb-release
+         wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+         echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+         sudo apt-get update
+         sudo apt-get install trivy
+         trivy -v
+         pwd
+    - task: CmdLine@2
+      displayName: RUN AQUASEC TRIVY SCAN AND COPY TO ARTIFACTS STAGING DIRECTORY
+      inputs:
+        script: |
+          trivy image --exit-code 0 --severity LOW,MEDIUM $(containerRegistry)/$(imageRepository):$(tag) > low-med.txt
+          trivy image --exit-code 1 --severity HIGH,CRITICAL $(containerRegistry)/$(imageRepository):$(tag) > high-critical.txt
+          ls -l
+          cp -rvf *.txt $(target)
+
+    - task: PublishBuildArtifacts@1
+      displayName: PUBLISH ARTIFACTS
+      inputs:
+        targetPath: '$(target)'
+        artifactName: '$(artifact)'
+    
+    - task: DownloadBuildArtifacts@1
+      displayName: DOWNLOAD ARTIFACTS
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        downloadPath: '$(System.ArtifactsDirectory)'
