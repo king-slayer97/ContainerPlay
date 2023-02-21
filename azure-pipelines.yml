@@ -54,14 +54,15 @@ stages:
          sudo apt-get install trivy
          trivy -v
          pwd
+         helm version
     - task: CmdLine@2
       displayName: RUN AQUASEC TRIVY SCAN AND COPY TO ARTIFACTS STAGING DIRECTORY
       inputs:
         script: |
-          trivy image --exit-code 0 --severity LOW,MEDIUM -f json $(containerRegistry)/$(imageRepository):$(tag) > low-med.json
-          trivy image --exit-code 1 --severity HIGH,CRITICAL -f json $(containerRegistry)/$(imageRepository):$(tag) > high-critical.json
+          trivy image --exit-code 0 --severity LOW,MEDIUM --format template --template "@/usr/local/share/trivy/templates/html.tpl" $(containerRegistry)/$(imageRepository):$(tag) > low-med.html
+          trivy image --exit-code 1 --severity HIGH,CRITICAL --format template --template "@/usr/local/share/trivy/templates/html.tpl" $(containerRegistry)/$(imageRepository):$(tag) > high-critical.html
           ls -l
-          cp -rvf *.json $(target)
+          cp -rvf *.html $(target)
 
     - task: PublishBuildArtifacts@1
       displayName: PUBLISH ARTIFACTS
