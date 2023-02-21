@@ -16,6 +16,10 @@ variables:
   dockerfilePath: '$(Build.SourcesDirectory)/ACRTasks/dockerfile'
   target: $(build.artifactstagingdirectory)
   artifact: AM
+  serviceconn: 'Azure subscription 1(7316292b-be22-4576-a33e-ccdc77cb3c7c)'
+  storageaccount: 'tynybaytrivyreport'
+  resourcegroup: 'aks-trivy'
+  sacontainername: 'trivy-scan-reports'
   tag: '$(Build.BuildId)'
 
   # Agent VM image name
@@ -71,3 +75,13 @@ stages:
         buildType: 'current'
         downloadType: 'single'
         downloadPath: '$(System.ArtifactsDirectory)'
+    
+    - task: AzureCLI@1
+      displayName: COPY AQUASEC TRIVY SCAN REPORTS TO BLOB STORAGE
+      inputs:
+        azureSubscription: '$(serviceconn)'
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az storage blob upload-batch -d $(sacontainername)/$(date "+%d-%m-%Y_%H-%M-%S") --account-name $(storageaccount) --account-key $(az storage account keys list -g $(resourcegroup) -n $(storageaccount) --query [0].value -o tsv) -s $(System.ArtifactsDirectory)/AM
+#         az storage blob upload-batch -d trivy-scan-reports/$(Get-Date -Format dd-MM-yyyy_HH-mm) --account-name $(storageaccount) --account-key $(az storage account keys list -g $(resourcegroup) -n $(storageaccount) --query [0].value -o tsv) -s $(System.ArtifactsDirectory)/AM
