@@ -58,8 +58,8 @@ stages:
       displayName: RUN AQUASEC TRIVY SCAN AND COPY TO ARTIFACTS STAGING DIRECTORY
       inputs:
         script: |
-          trivy image --exit-code 0 --severity LOW,MEDIUM --format template --template "@contrib/html.tpl" $(containerRegistry)/$(imageRepository):$(tag) > low-med.html
-          trivy image --exit-code 1 --severity HIGH,CRITICAL --format template --template "@contrib/html.tpl" $(containerRegistry)/$(imageRepository):$(tag) > high-critical.html
+          trivy image --exit-code 0 --severity LOW,MEDIUM --format template --template "@/usr/local/share/trivy/templates/html.tpl" $(containerRegistry)/$(imageRepository):$(tag) > low-med.html
+          trivy image --exit-code 1 --severity HIGH,CRITICAL --format template --template "@/usr/local/share/trivy/templates/html.tpl" $(containerRegistry)/$(imageRepository):$(tag) > high-critical.html
           ls -l
           cp -rvf *.html $(target)
 
