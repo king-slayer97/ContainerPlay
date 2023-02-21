@@ -54,6 +54,7 @@ stages:
          sudo apt-get install trivy
          trivy -v
          pwd
+         helm version
     - task: CmdLine@2
       displayName: RUN AQUASEC TRIVY SCAN AND COPY TO ARTIFACTS STAGING DIRECTORY
       inputs:
