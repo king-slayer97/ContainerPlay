@@ -58,10 +58,10 @@ stages:
       displayName: RUN AQUASEC TRIVY SCAN AND COPY TO ARTIFACTS STAGING DIRECTORY
       inputs:
         script: |
-          trivy image --exit-code 0 --format template --template "@contrib/html.tpl" -o report.html --severity LOW,MEDIUM $(containerRegistry)/$(imageRepository):$(tag) > low-med.html
-          trivy image --exit-code 1 --format template --template "@contrib/html.tpl" -o report.html --severity HIGH,CRITICAL $(containerRegistry)/$(imageRepository):$(tag) > high-critical.html
+          trivy image --exit-code 0 --severity LOW,MEDIUM -f json $(containerRegistry)/$(imageRepository):$(tag) > low-med.json
+          trivy image --exit-code 1 --severity HIGH,CRITICAL -f json $(containerRegistry)/$(imageRepository):$(tag) > high-critical.json
           ls -l
-          cp -rvf *.html $(target)
+          cp -rvf *.json $(target)
 
     - task: PublishBuildArtifacts@1
       displayName: PUBLISH ARTIFACTS
