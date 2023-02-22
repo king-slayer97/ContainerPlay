@@ -63,6 +63,7 @@ stages:
           ls -l
           cp -rvf *.json $(target)
     - task: CopyFiles@2
+      displayName: Copy files to Staging Directory
       inputs:
         Contents: 'aks-deploy-from-acr.yaml'
         TargetFolder: '$(build.artifactstagingdirectory)'
