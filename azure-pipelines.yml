@@ -65,7 +65,7 @@ stages:
     - task: CopyFiles@2
       displayName: Copy files to Staging Directory
       inputs:
-        Contents: 'aks-deploy-from-acr.yaml'
+        Contents: '$(Build.SourcesDirectory)/ACRTasks/aks-deploy-from-acr.yaml'
         TargetFolder: '$(build.artifactstagingdirectory)'
     - task: PublishBuildArtifacts@1
       displayName: PUBLISH ARTIFACTS
