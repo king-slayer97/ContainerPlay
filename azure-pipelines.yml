@@ -62,7 +62,10 @@ stages:
           trivy image --exit-code 1 --severity HIGH,CRITICAL -f json $(containerRegistry)/$(imageRepository):$(tag) > high-critical.json
           ls -l
           cp -rvf *.json $(target)
-
+    - task: CopyFiles@2
+      inputs:
+        Contents: 'aks-deploy-from-acr.yaml'
+        TargetFolder: '$(build.artifactstagingdirectory)'
     - task: PublishBuildArtifacts@1
       displayName: PUBLISH ARTIFACTS
       inputs:
